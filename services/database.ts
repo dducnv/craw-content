@@ -9,6 +9,9 @@ interface Question {
     text: string;
     isCorrect: boolean;
   }[];
+  explanation?: string;
+  paragraph?: string;
+  hasMultipleCorrect?: boolean;
 }
 
 interface CrawlerDB extends DBSchema {
@@ -56,6 +59,20 @@ class DatabaseService {
     const store = tx.objectStore('questions');
     await store.clear();
     await tx.done;
+  }
+
+  // Xóa toàn bộ database
+  async deleteDatabase() {
+    if (this.db) {
+      this.db.close();
+      this.db = null;
+    }
+    await new Promise<void>((resolve, reject) => {
+      const req = indexedDB.deleteDatabase('crawler-db');
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+      req.onblocked = () => reject(new Error('Delete blocked'));
+    });
   }
 }
 

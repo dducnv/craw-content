@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { CrawlerService } from '@/services/crawler';
 import { FetcherService } from '@/services/fetcher';
 import { db } from '@/services/database';
+import { SelectorConfig } from '@/services/config';
+import SelectorConfigComponent from '@/components/SelectorConfig';
 
 interface Question {
   id: string;
@@ -14,6 +16,9 @@ interface Question {
     text: string;
     isCorrect: boolean;
   }[];
+  explanation?: string;
+  paragraph?: string;
+  hasMultipleCorrect?: boolean;
 }
 
 type InputMethod = 'url' | 'html';
@@ -25,6 +30,7 @@ export default function Home() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [customConfig, setCustomConfig] = useState<SelectorConfig | null>(null);
 
   useEffect(() => {
     loadQuestions();
@@ -44,12 +50,13 @@ export default function Home() {
       let content: string;
       if (inputMethod === 'url') {
         content = await FetcherService.fetchContent(url);
+        const extractedQuestions = await CrawlerService.extractQuestions(content, url, customConfig);
+        await db.saveQuestions(extractedQuestions);
       } else {
-        content = html;
+        content   = html;
+        const extractedQuestions = await CrawlerService.extractQuestions(content, undefined, customConfig);
+        await db.saveQuestions(extractedQuestions);
       }
-
-      const extractedQuestions = await CrawlerService.extractQuestions(content);
-      await db.saveQuestions(extractedQuestions);
       await loadQuestions();
     } catch (error) {
       console.error('Error processing content:', error);
@@ -60,8 +67,15 @@ export default function Home() {
   };
 
   const handleClear = async () => {
-    await db.clearQuestions();
+    await db.deleteDatabase();
     setQuestions([]);
+    setError(null);
+  };
+
+  const handleClearForm = () => {
+    setUrl('');
+    setHtml('');
+    setCustomConfig(null);
     setError(null);
   };
 
@@ -148,6 +162,14 @@ export default function Home() {
               />
             </div>
           )}
+
+          <div className="mb-4">
+            <SelectorConfigComponent
+              onConfigChange={setCustomConfig}
+              initialConfig={customConfig || undefined}
+            />
+          </div>
+
           <div className="flex gap-4">
             <button
               type="submit"
@@ -158,10 +180,17 @@ export default function Home() {
             </button>
             <button
               type="button"
+              onClick={handleClearForm}
+              className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+            >
+              Clear Form
+            </button>
+            <button
+              type="button"
               onClick={handleClear}
               className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
             >
-              Clear All
+              Clear All Data
             </button>
           </div>
         </form>
@@ -170,20 +199,38 @@ export default function Home() {
       <div className="space-y-6">
         {questions.map((question) => (
           <div key={question.id} className="border rounded p-4">
-            <h3 className="font-bold mb-2">{question.questionNumber}</h3>
+            <div className="flex justify-between items-start mb-2">
+              <h3 className="font-bold">{question.questionNumber}</h3>
+              {question.hasMultipleCorrect && (
+                <span className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                  Multiple correct answers
+                </span>
+              )}
+            </div>
             <p className="mb-4">{question.questionText}</p>
             <ul className="space-y-2">
               {question.answers.map((answer, index) => (
                 <li
                   key={index}
                   className={`p-2 rounded ${
-                    answer.isCorrect ? 'bg-green-800' : 'bg-gray-600'
+                    answer.isCorrect ? 'bg-green-600' : 'bg-gray-800'
                   }`}
                 >
                   <span className="font-medium">{answer.label}</span> {answer.text}
                 </li>
               ))}
             </ul>
+            {question.explanation && (
+              <div className="mt-4 p-3 bg-yellow-50 rounded">
+                <p className="font-medium text-yellow-800">Explanation:</p>
+                <p className="text-yellow-700">{question.explanation}</p>
+              </div>
+            )}
+            {question.paragraph && (
+              <div className="mt-2 p-3 bg-gray-50 rounded">
+                <p className="text-gray-700">{question.paragraph}</p>
+              </div>
+            )}
           </div>
         ))}
       </div>

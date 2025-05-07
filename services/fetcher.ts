@@ -1,39 +1,40 @@
 export class FetcherService {
   private static readonly PROXY_URL = 'https://cors-anywhere.herokuapp.com/';
 
-  static async fetchContent(url: string): Promise<string> {
+  public static async fetchContent(url: string): Promise<string> {
     try {
-      // Thử fetch trực tiếp trước
-      try {
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+      // Sử dụng CORS Anywhere với headers đúng
+      const proxyUrl = this.PROXY_URL + url;
+      const response = await fetch(proxyUrl, {
+        headers: {
+          'Origin': 'http://localhost:3000',
+          'X-Requested-With': 'XMLHttpRequest',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         }
-        return await response.text();
-      } catch (error) {
-        console.log('Direct fetch failed:', error);
-        console.log('Trying with proxy...');
-        
-        // Nếu fetch trực tiếp thất bại, thử dùng proxy
-        const proxyResponse = await fetch(this.PROXY_URL + url, {
-          headers: {
-            'Origin': 'http://localhost:3000'
-          }
-        });
+      });
 
-        if (proxyResponse.status === 403) {
-          throw new Error('CORS Anywhere proxy requires activation. Please visit https://cors-anywhere.herokuapp.com/corsdemo and click "Request temporary access to the demo server" before trying again.');
+      if (!response.ok) {
+        if (response.status === 403) {
+          throw new Error(
+            'CORS proxy access denied. Please visit https://cors-anywhere.herokuapp.com/corsdemo ' +
+            'and click the button to temporarily unlock access to the demo server.'
+          );
         }
-
-        if (!proxyResponse.ok) {
-          throw new Error(`Proxy HTTP error! status: ${proxyResponse.status}`);
-        }
-
-        return await proxyResponse.text();
+        throw new Error(`Failed to fetch content: ${response.statusText}`);
       }
+
+      return await response.text();
     } catch (error) {
       console.error('Error fetching content:', error);
-      throw error instanceof Error ? error : new Error('Failed to fetch content from URL. Please try using the HTML input method instead.');
+      if (error instanceof Error) {
+        throw new Error(
+          `Failed to fetch content: ${error.message}. ` +
+          'Try using the HTML input method instead, or visit https://cors-anywhere.herokuapp.com/corsdemo ' +
+          'to enable the proxy.'
+        );
+      }
+      throw error;
     }
   }
 } 
