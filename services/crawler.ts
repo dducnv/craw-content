@@ -66,7 +66,13 @@ export class CrawlerService {
       const answers: { label: string; text: string; isCorrect: boolean }[] = [];
       
       correctAnswers.forEach((answer, i) => {
-        const text = answer.textContent?.trim() || '';
+        let text = answer.textContent?.trim() || '';
+        // Bỏ tiền tố ABCD. hoặc số thứ tự ở đầu
+        text = text.replace(/^[A-D]\.?\s+|^\d+\.?\s+/i, '');
+        // Thêm dấu chấm ở cuối nếu chưa có
+        if (text && !text.trim().endsWith('.')) {
+          text = text.trim() + '.';
+        }
         if (text) {
           answers.push({
             label: String.fromCharCode(65 + i),
@@ -77,7 +83,13 @@ export class CrawlerService {
       });
       
       incorrectAnswers.forEach((answer, i) => {
-        const text = answer.textContent?.trim() || '';
+        let text = answer.textContent?.trim() || '';
+        // Bỏ tiền tố ABCD. hoặc số thứ tự ở đầu
+        text = text.replace(/^[A-D]\.?\s+|^\d+\.?\s+/i, '');
+        // Thêm dấu chấm ở cuối nếu chưa có
+        if (text && !text.trim().endsWith('.')) {
+          text = text.trim() + '.';
+        }
         if (text) {
           answers.push({
             label: String.fromCharCode(65 + correctAnswers.length + i),
