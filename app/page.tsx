@@ -79,6 +79,24 @@ export default function Home() {
     setError(null);
   };
 
+  const handleExportJSON = () => {
+    const exportData = questions.map(q => ({
+      text: q.questionText,
+      explanation: q.explanation,
+      answers: q.answers.map(a => ({
+        text: a.text,
+        correct: a.isCorrect
+      }))
+    }));
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'questions.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="min-h-screen p-8">
       <h1 className="text-3xl font-bold mb-8">Question Crawler</h1>
@@ -191,6 +209,13 @@ export default function Home() {
               className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
             >
               Clear All Data
+            </button>
+            <button
+              type="button"
+              onClick={handleExportJSON}
+              className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+            >
+              Export JSON
             </button>
           </div>
         </form>
