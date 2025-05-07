@@ -216,7 +216,7 @@ export default function Home() {
                     answer.isCorrect ? 'bg-green-600' : 'bg-gray-800'
                   }`}
                 >
-                  <span className="font-medium">{answer.label}</span> {answer.text}
+                  {answer.text}
                 </li>
               ))}
             </ul>
