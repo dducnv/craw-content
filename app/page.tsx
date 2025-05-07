@@ -1,103 +1,192 @@
-import Image from "next/image";
+'use client';
+
+import { useState, useEffect } from 'react';
+import { CrawlerService } from '@/services/crawler';
+import { FetcherService } from '@/services/fetcher';
+import { db } from '@/services/database';
+
+interface Question {
+  id: string;
+  questionNumber: string;
+  questionText: string;
+  answers: {
+    label: string;
+    text: string;
+    isCorrect: boolean;
+  }[];
+}
+
+type InputMethod = 'url' | 'html';
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [inputMethod, setInputMethod] = useState<InputMethod>('url');
+  const [url, setUrl] = useState('');
+  const [html, setHtml] = useState('');
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+  useEffect(() => {
+    loadQuestions();
+  }, []);
+
+  const loadQuestions = async () => {
+    const savedQuestions = await db.getAllQuestions();
+    setQuestions(savedQuestions);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    try {
+      let content: string;
+      if (inputMethod === 'url') {
+        content = await FetcherService.fetchContent(url);
+      } else {
+        content = html;
+      }
+
+      const extractedQuestions = await CrawlerService.extractQuestions(content);
+      await db.saveQuestions(extractedQuestions);
+      await loadQuestions();
+    } catch (error) {
+      console.error('Error processing content:', error);
+      setError(error instanceof Error ? error.message : 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleClear = async () => {
+    await db.clearQuestions();
+    setQuestions([]);
+    setError(null);
+  };
+
+  return (
+    <div className="min-h-screen p-8">
+      <h1 className="text-3xl font-bold mb-8">Question Crawler</h1>
+      
+      <div className="mb-8">
+        <div className="flex border-b mb-4">
+          <button
+            className={`px-4 py-2 ${
+              inputMethod === 'url'
+                ? 'border-b-2 border-blue-500 text-blue-500'
+                : 'text-gray-500'
+            }`}
+            onClick={() => {
+              setInputMethod('url');
+              setError(null);
+            }}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            Input URL
+          </button>
+          <button
+            className={`px-4 py-2 ${
+              inputMethod === 'html'
+                ? 'border-b-2 border-blue-500 text-blue-500'
+                : 'text-gray-500'
+            }`}
+            onClick={() => {
+              setInputMethod('html');
+              setError(null);
+            }}
           >
-            Read our docs
-          </a>
+            Input HTML
+          </button>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        {error && (
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded text-red-700">
+            <p className="font-medium">Error:</p>
+            <p>{error}</p>
+            {error.includes('CORS') && (
+              <div className="mt-2">
+                <p className="font-medium">How to fix:</p>
+                <ol className="list-decimal list-inside mt-1">
+                  <li>Try using the HTML input method instead</li>
+                  <li>Or visit <a href="https://cors-anywhere.herokuapp.com/corsdemo" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">CORS Anywhere Demo</a> to enable the proxy</li>
+                </ol>
+              </div>
+            )}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit}>
+          {inputMethod === 'url' ? (
+            <div className="mb-4">
+              <label htmlFor="url" className="block mb-2">Enter URL:</label>
+              <input
+                type="url"
+                id="url"
+                value={url}
+                onChange={(e) => {
+                  setUrl(e.target.value);
+                  setError(null);
+                }}
+                className="w-full p-2 border rounded"
+                placeholder="https://example.com"
+                required
+              />
+            </div>
+          ) : (
+            <div className="mb-4">
+              <label htmlFor="html" className="block mb-2">Paste HTML content:</label>
+              <textarea
+                id="html"
+                value={html}
+                onChange={(e) => {
+                  setHtml(e.target.value);
+                  setError(null);
+                }}
+                className="w-full h-48 p-2 border rounded"
+                placeholder="Paste your HTML here..."
+                required
+              />
+            </div>
+          )}
+          <div className="flex gap-4">
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
+            >
+              {loading ? 'Processing...' : 'Extract Questions'}
+            </button>
+            <button
+              type="button"
+              onClick={handleClear}
+              className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+            >
+              Clear All
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <div className="space-y-6">
+        {questions.map((question) => (
+          <div key={question.id} className="border rounded p-4">
+            <h3 className="font-bold mb-2">{question.questionNumber}</h3>
+            <p className="mb-4">{question.questionText}</p>
+            <ul className="space-y-2">
+              {question.answers.map((answer, index) => (
+                <li
+                  key={index}
+                  className={`p-2 rounded ${
+                    answer.isCorrect ? 'bg-green-800' : 'bg-gray-600'
+                  }`}
+                >
+                  <span className="font-medium">{answer.label}</span> {answer.text}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
