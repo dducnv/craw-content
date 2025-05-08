@@ -7,6 +7,11 @@ import { db } from '@/services/database';
 import { SelectorConfig } from '@/services/config';
 import SelectorConfigComponent from '@/components/SelectorConfig';
 import { FiChevronLeft, FiChevronRight, FiTrash2, FiFileText } from 'react-icons/fi';
+import 'prismjs/components/prism-markup';
+import 'prismjs/themes/prism.css';
+import prettier from 'prettier/standalone';
+import parserHtml from 'prettier/parser-html';
+import MonacoEditor from '@monaco-editor/react';
 
 interface Question {
   id: string;
@@ -24,6 +29,14 @@ interface Question {
 }
 
 type InputMethod = 'url' | 'html';
+
+// Hàm format HTML
+function formatHtml(html: string) {
+  return prettier.format(html, {
+    parser: 'html',
+    plugins: [parserHtml],
+  });
+}
 
 export default function Home() {
   const [inputMethod, setInputMethod] = useState<InputMethod>('url');
@@ -252,17 +265,21 @@ export default function Home() {
             ) : (
               <div className="mb-4">
                 <label htmlFor="html" className="block mb-2">Paste HTML content:</label>
-                <textarea
-                  id="html"
-                  value={html}
-                  onChange={(e) => {
-                    setHtml(e.target.value);
-                    setError(null);
-                  }}
-                  className="w-full h-48 p-2 border rounded"
-                  placeholder="Paste your HTML here..."
-                  required
-                />
+                <button
+                  type="button"
+                  className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                  onClick={() => formatHtml(html).then(setHtml)}
+                >
+                  Format HTML
+                </button>
+                <div className="mt-2 border rounded p-2">
+                  <MonacoEditor
+                    height="400px"
+                    defaultLanguage="html"
+                    value={html}
+                    onChange={value => setHtml(value || '')}
+                  />
+                </div>
                 <div className="flex gap-2 mt-2">
                   <input
                     type="text"
