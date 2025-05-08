@@ -7,6 +7,7 @@ export interface SelectorConfig {
   };
   explanation?: string;     // Selector cho phần giải thích (optional)
   paragraph?: string;       // Selector cho đoạn văn bản bổ sung (optional)
+  image?: string;
 }
 
 // Cấu hình mặc định cho trang hamexam.org
@@ -18,7 +19,8 @@ export const defaultConfig: SelectorConfig = {
     incorrect: '.answer:not(.correctAnswer)'
   },
   explanation: '.explanation',
-  paragraph: '.paragraph'
+  paragraph: '.paragraph',
+  image: 'img'
 };
 
 // Cấu hình cho các trang khác có thể được thêm vào đây
@@ -32,6 +34,7 @@ export const configs: Record<string, SelectorConfig> = {
       incorrect: '.answer:not(.correct)'
     },
     explanation: '.explanation',
-    paragraph: '.paragraph'
+    paragraph: '.paragraph',
+    image: 'img'
   }
 }; 

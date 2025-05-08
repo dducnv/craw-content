@@ -22,7 +22,8 @@ export default function SelectorConfigComponent({ onConfigChange, initialConfig 
       incorrect: ''
     },
     explanation: '',
-    paragraph: ''
+    paragraph: '',
+    image: ''
   });
   const [savedConfigs, setSavedConfigs] = useState<SavedConfig[]>([]);
   const [configName, setConfigName] = useState('');
@@ -66,7 +67,8 @@ export default function SelectorConfigComponent({ onConfigChange, initialConfig 
       questionText: cfg.questionText,
       answers: { ...cfg.answers },
       explanation: cfg.explanation,
-      paragraph: cfg.paragraph
+      paragraph: cfg.paragraph,
+      image: cfg.image
     });
   };
 
@@ -124,8 +126,8 @@ export default function SelectorConfigComponent({ onConfigChange, initialConfig 
   };
 
   return (
-    <div className="border rounded p-4 bg-gray-800">
-      <h3 className="text-lg font-medium mb-4 text-gray-50">Selector Configuration</h3>
+    <div className="border rounded p-4 bg-white dark:bg-gray-800">
+      <h3 className="text-lg font-medium mb-4 text-gray-900 dark:text-gray-50">Selector Configuration</h3>
 
       {/* Saved Configs List */}
       <div className="mb-4">
@@ -134,7 +136,7 @@ export default function SelectorConfigComponent({ onConfigChange, initialConfig 
             type="text"
             value={configName}
             onChange={e => setConfigName(e.target.value)}
-            className="p-2 border rounded bg-gray-700 text-gray-50 mr-2"
+            className="p-2 border rounded mr-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-50 border-gray-300 dark:border-gray-600 placeholder-gray-400 dark:placeholder-gray-400"
             placeholder="Config name"
           />
           <button
@@ -151,7 +153,7 @@ export default function SelectorConfigComponent({ onConfigChange, initialConfig 
           >
             Export Configs
           </button>
-          <label className="px-3 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 cursor-pointer mb-0">
+          <label className="px-3 py-2 bg-gray-200 dark:bg-gray-600 text-gray-900 dark:text-white rounded hover:bg-gray-300 dark:hover:bg-gray-700 cursor-pointer mb-0">
             Import Configs
             <input
               type="file"
@@ -164,8 +166,8 @@ export default function SelectorConfigComponent({ onConfigChange, initialConfig 
         {savedConfigs.length > 0 && (
           <div className="space-y-1">
             {savedConfigs.map(cfg => (
-              <div key={cfg.name} className="flex items-center justify-between bg-gray-700 rounded px-2 py-1 cursor-pointer hover:bg-gray-600">
-                <span onClick={() => handleApplyConfig(cfg)} className="flex-1 text-gray-50">{cfg.name}</span>
+              <div key={cfg.name} className="flex items-center justify-between bg-gray-200 dark:bg-gray-700 rounded px-2 py-1 cursor-pointer hover:bg-gray-300 dark:hover:bg-gray-600">
+                <span onClick={() => handleApplyConfig(cfg)} className="flex-1 text-gray-900 dark:text-gray-50">{cfg.name}</span>
                 <button
                   type="button"
                   onClick={() => handleDeleteConfig(cfg.name)}
@@ -181,92 +183,105 @@ export default function SelectorConfigComponent({ onConfigChange, initialConfig 
 
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-50 mb-1">
+          <label className="block text-sm font-medium text-gray-900 dark:text-gray-50 mb-1">
             Container Selector
           </label>
           <input
             type="text"
             value={config.container}
             onChange={(e) => handleChange('container', e.target.value)}
-            className="w-full p-2 border rounded bg-gray-700 text-gray-50"
+            className="w-full p-2 border rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-50 border-gray-300 dark:border-gray-600 placeholder-gray-400 dark:placeholder-gray-400"
             placeholder="e.g., .question"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-50 mb-1">
+          <label className="block text-sm font-medium text-gray-900 dark:text-gray-50 mb-1">
             Question Text Selector
           </label>
           <input
             type="text"
             value={config.questionText}
             onChange={(e) => handleChange('questionText', e.target.value)}
-            className="w-full p-2 border rounded bg-gray-700 text-gray-50"
+            className="w-full p-2 border rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-50 border-gray-300 dark:border-gray-600 placeholder-gray-400 dark:placeholder-gray-400"
             placeholder="e.g., .question-text or .questionContent"
           />
         </div>
 
-        <div className="border-t border-gray-700 pt-4">
-          <h4 className="font-medium mb-2 text-gray-50">Answer Selectors</h4>
+        <div className="border-t border-gray-300 dark:border-gray-700 pt-4">
+          <h4 className="font-medium mb-2 text-gray-900 dark:text-gray-50">Answer Selectors</h4>
           
           <div className="space-y-3">
             <div>
-              <label className="block text-sm font-medium text-gray-50 mb-1">
+              <label className="block text-sm font-medium text-gray-900 dark:text-gray-50 mb-1">
                 Correct Answer Selector
               </label>
               <input
                 type="text"
                 value={config.answers.correct}
                 onChange={(e) => handleChange('answers.correct', e.target.value)}
-                className="w-full p-2 border rounded bg-gray-700 text-gray-50"
+                className="w-full p-2 border rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-50 border-gray-300 dark:border-gray-600 placeholder-gray-400 dark:placeholder-gray-400"
                 placeholder="e.g., .correct"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-50 mb-1">
+              <label className="block text-sm font-medium text-gray-900 dark:text-gray-50 mb-1">
                 Incorrect Answer Selector
               </label>
               <input
                 type="text"
                 value={config.answers.incorrect}
                 onChange={(e) => handleChange('answers.incorrect', e.target.value)}
-                className="w-full p-2 border rounded bg-gray-700 text-gray-50"
+                className="w-full p-2 border rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-50 border-gray-300 dark:border-gray-600 placeholder-gray-400 dark:placeholder-gray-400"
                 placeholder="e.g., .answer:not(.correct)"
               />
             </div>
           </div>
         </div>
 
-        <div className="border-t border-gray-700 pt-4">
-          <h4 className="font-medium mb-2 text-gray-50">Optional Selectors</h4>
+        <div className="border-t border-gray-300 dark:border-gray-700 pt-4">
+          <h4 className="font-medium mb-2 text-gray-900 dark:text-gray-50">Optional Selectors</h4>
           
           <div className="space-y-3">
             <div>
-              <label className="block text-sm font-medium text-gray-50 mb-1">
+              <label className="block text-sm font-medium text-gray-900 dark:text-gray-50 mb-1">
                 Explanation
               </label>
               <input
                 type="text"
                 value={config.explanation}
                 onChange={(e) => handleChange('explanation', e.target.value)}
-                className="w-full p-2 border rounded bg-gray-700 text-gray-50"
+                className="w-full p-2 border rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-50 border-gray-300 dark:border-gray-600 placeholder-gray-400 dark:placeholder-gray-400"
                 placeholder="e.g., .explanation"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-50 mb-1">
+              <label className="block text-sm font-medium text-gray-900 dark:text-gray-50 mb-1">
                 Paragraph
               </label>
               <input
                 type="text"
                 value={config.paragraph}
                 onChange={(e) => handleChange('paragraph', e.target.value)}
-                className="w-full p-2 border rounded bg-gray-700 text-gray-50"
+                className="w-full p-2 border rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-50 border-gray-300 dark:border-gray-600 placeholder-gray-400 dark:placeholder-gray-400"
                 placeholder="e.g., .paragraph"
               />
             </div>
           </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-900 dark:text-gray-50 mb-1">
+            Image Selector
+          </label>
+          <input
+            type="text"
+            value={config.image || ''}
+            onChange={(e) => handleChange('image', e.target.value)}
+            className="w-full p-2 border rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-50 border-gray-300 dark:border-gray-600 placeholder-gray-400 dark:placeholder-gray-400"
+            placeholder="e.g., img, .question-image"
+          />
         </div>
       </div>
     </div>

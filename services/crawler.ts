@@ -12,6 +12,7 @@ export interface Question {
   explanation?: string;
   paragraph?: string;
   hasMultipleCorrect?: boolean;
+  image?: string;
 }
 
 export class CrawlerService {
@@ -52,13 +53,13 @@ export class CrawlerService {
     const questions: Question[] = [];
 
     questionElements.forEach((element, index) => {
-      // Lấy text câu hỏi từ questionTextSelector bên trong block nếu có
+      // Lấy HTML câu hỏi từ questionTextSelector bên trong block nếu có
       let questionText = '';
       const questionTextElem = element.querySelector(questionTextSelector);
       if (questionTextElem) {
-        questionText = questionTextElem.textContent?.trim() || '';
+        questionText = questionTextElem.innerHTML.trim() || '';
       } else {
-        questionText = element.textContent?.trim() || '';
+        questionText = element.innerHTML.trim() || '';
       }
       
       const correctAnswers = element.querySelectorAll(correctSelector);
@@ -67,14 +68,14 @@ export class CrawlerService {
       const answers: { label: string; text: string; isCorrect: boolean }[] = [];
       
       correctAnswers.forEach((answer, i) => {
-        let text = answer.textContent?.trim() || '';
-        // Bỏ tiền tố ABCD. hoặc số thứ tự ở đầu
+        let text = answer.innerHTML.trim() || '';
+        // Bỏ tiền tố ABCD. hoặc số thứ tự ở đầu (chỉ với text, không ảnh hưởng đến HTML)
         text = text.replace(/^[A-D]\.?\s+|^\d+\.?\s+/i, '');
-        // Thêm dấu chấm ở cuối nếu chưa có
-        if (text && !text.trim().endsWith('.')) {
+        // Thêm dấu chấm ở cuối nếu chưa có (chỉ với text, không ảnh hưởng đến HTML)
+        if (text && !text.replace(/<[^>]+>/g, '').trim().endsWith('.')) {
           text = text.trim() + '.';
         }
-        // Viết hoa chữ cái đầu dòng
+        // Viết hoa chữ cái đầu dòng (chỉ với text, không ảnh hưởng đến HTML)
         if (text) {
           text = text.charAt(0).toUpperCase() + text.slice(1);
         }
@@ -88,14 +89,11 @@ export class CrawlerService {
       });
       
       incorrectAnswers.forEach((answer, i) => {
-        let text = answer.textContent?.trim() || '';
-        // Bỏ tiền tố ABCD. hoặc số thứ tự ở đầu
+        let text = answer.innerHTML.trim() || '';
         text = text.replace(/^[A-D]\.?\s+|^\d+\.?\s+/i, '');
-        // Thêm dấu chấm ở cuối nếu chưa có
-        if (text && !text.trim().endsWith('.')) {
+        if (text && !text.replace(/<[^>]+>/g, '').trim().endsWith('.')) {
           text = text.trim() + '.';
         }
-        // Viết hoa chữ cái đầu dòng
         if (text) {
           text = text.charAt(0).toUpperCase() + text.slice(1);
         }
@@ -110,17 +108,35 @@ export class CrawlerService {
 
       let explanation = '';
       if (explanationSelector && element.querySelector(explanationSelector)) {
-        explanation = element.querySelector(explanationSelector)?.textContent?.trim() || '';
+        explanation = element.querySelector(explanationSelector)?.innerHTML.trim() || '';
       } else {
         // Tìm explanation trong text của block nếu không có selector riêng
-        const blockText = element.textContent || '';
-        const match = blockText.match(/Explanation:(.*)$/i);
+        const blockHtml = element.innerHTML || '';
+        const match = blockHtml.match(/Explanation:(.*)$/i);
         if (match) {
           explanation = match[1].trim();
         }
       }
 
-      const paragraph = element.querySelector(paragraphSelector)?.textContent?.trim();
+      let paragraph: string | undefined = undefined;
+      if (paragraphSelector && element.querySelector(paragraphSelector)) {
+        paragraph = element.querySelector(paragraphSelector)?.innerHTML.trim();
+      }
+
+      // Lấy image nếu có
+      let image: string | undefined = undefined;
+      if (config.image) {
+        const imgElem = element.querySelector(config.image);
+        if (imgElem && imgElem instanceof HTMLImageElement) {
+          image = imgElem.src;
+        } else if (imgElem) {
+          // Nếu không phải <img> nhưng có background-image
+          const bg = (imgElem as HTMLElement).style.backgroundImage;
+          if (bg && bg.startsWith('url(')) {
+            image = bg.slice(4, -1).replace(/['"]/g, '');
+          }
+        }
+      }
 
       questions.push({
         id: `${index + 1}`,
@@ -129,7 +145,8 @@ export class CrawlerService {
         answers,
         explanation,
         paragraph,
-        hasMultipleCorrect: correctAnswers.length > 1
+        hasMultipleCorrect: correctAnswers.length > 1,
+        image
       });
     });
 
