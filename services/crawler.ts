@@ -41,19 +41,20 @@ export class CrawlerService {
     const config = this.getConfig(url, customConfig);
     
     // Sử dụng selector cha cho block câu hỏi
-    const questionSelector = config.questionText || '.question';
+    const containerSelector = config.container || '.question';
+    const questionTextSelector = config.questionText || '.questionText';
     const correctSelector = config.answers.correct || '.correctAnswer';
     const incorrectSelector = config.answers.incorrect || '.answer:not(.correctAnswer)';
     const explanationSelector = config.explanation || '.explanation';
     const paragraphSelector = config.paragraph || '.paragraph';
 
-    const questionElements = doc.querySelectorAll(questionSelector);
+    const questionElements = doc.querySelectorAll(containerSelector);
     const questions: Question[] = [];
 
     questionElements.forEach((element, index) => {
-      // Lấy text câu hỏi từ .questionText bên trong block nếu có
+      // Lấy text câu hỏi từ questionTextSelector bên trong block nếu có
       let questionText = '';
-      const questionTextElem = element.querySelector('.questionText');
+      const questionTextElem = element.querySelector(questionTextSelector);
       if (questionTextElem) {
         questionText = questionTextElem.textContent?.trim() || '';
       } else {
@@ -99,7 +100,18 @@ export class CrawlerService {
         }
       });
 
-      const explanation = element.querySelector(explanationSelector)?.textContent?.trim();
+      let explanation = '';
+      if (explanationSelector && element.querySelector(explanationSelector)) {
+        explanation = element.querySelector(explanationSelector)?.textContent?.trim() || '';
+      } else {
+        // Tìm explanation trong text của block nếu không có selector riêng
+        const blockText = element.textContent || '';
+        const match = blockText.match(/Explanation:(.*)$/i);
+        if (match) {
+          explanation = match[1].trim();
+        }
+      }
+
       const paragraph = element.querySelector(paragraphSelector)?.textContent?.trim();
 
       questions.push({

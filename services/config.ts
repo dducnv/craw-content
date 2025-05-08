@@ -1,4 +1,5 @@
 export interface SelectorConfig {
+  container: string;
   questionText: string;      // Selector cho nội dung câu hỏi
   answers: {
     correct: string;        // Selector cho đáp án đúng
@@ -10,6 +11,7 @@ export interface SelectorConfig {
 
 // Cấu hình mặc định cho trang hamexam.org
 export const defaultConfig: SelectorConfig = {
+  container: '.question',
   questionText: '.questionText',
   answers: {
     correct: '.correctAnswer',
@@ -23,7 +25,8 @@ export const defaultConfig: SelectorConfig = {
 export const configs: Record<string, SelectorConfig> = {
   'hamexam.org': defaultConfig,
   'example.com': {
-    questionText: '.question-text',
+    container: '.question-block',
+    questionText: '.question-title',
     answers: {
       correct: '.correct',
       incorrect: '.answer:not(.correct)'
