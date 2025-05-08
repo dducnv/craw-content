@@ -19,6 +19,7 @@ interface Question {
   explanation?: string;
   paragraph?: string;
   hasMultipleCorrect?: boolean;
+  image?: string;
 }
 
 type InputMethod = 'url' | 'html';
@@ -53,7 +54,7 @@ export default function Home() {
         const extractedQuestions = await CrawlerService.extractQuestions(content, url, customConfig);
         await db.saveQuestions(extractedQuestions);
       } else {
-        content   = html;
+        content = html;
         const extractedQuestions = await CrawlerService.extractQuestions(content, undefined, customConfig);
         await db.saveQuestions(extractedQuestions);
       }
@@ -83,6 +84,10 @@ export default function Home() {
     const exportData = questions.map(q => ({
       text: q.questionText,
       explanation: q.explanation,
+      paragraph: {
+        text: q.paragraph,
+      },
+      image: q.image || "",
       answers: q.answers.map(a => ({
         text: a.text,
         correct: a.isCorrect
@@ -100,15 +105,14 @@ export default function Home() {
   return (
     <div className="min-h-screen p-8">
       <h1 className="text-3xl font-bold mb-8">Question Crawler</h1>
-      
+
       <div className="mb-8">
         <div className="flex border-b mb-4">
           <button
-            className={`px-4 py-2 ${
-              inputMethod === 'url'
-                ? 'border-b-2 border-blue-500 text-blue-500'
-                : 'text-gray-500'
-            }`}
+            className={`px-4 py-2 ${inputMethod === 'url'
+              ? 'border-b-2 border-blue-500 text-blue-500'
+              : 'text-gray-500'
+              }`}
             onClick={() => {
               setInputMethod('url');
               setError(null);
@@ -117,11 +121,10 @@ export default function Home() {
             Input URL
           </button>
           <button
-            className={`px-4 py-2 ${
-              inputMethod === 'html'
-                ? 'border-b-2 border-blue-500 text-blue-500'
-                : 'text-gray-500'
-            }`}
+            className={`px-4 py-2 ${inputMethod === 'html'
+              ? 'border-b-2 border-blue-500 text-blue-500'
+              : 'text-gray-500'
+              }`}
             onClick={() => {
               setInputMethod('html');
               setError(null);
@@ -237,9 +240,8 @@ export default function Home() {
               {question.answers.map((answer, index) => (
                 <li
                   key={index}
-                  className={`p-2 rounded ${
-                    answer.isCorrect ? 'bg-green-600' : 'bg-gray-800'
-                  }`}
+                  className={`p-2 rounded ${answer.isCorrect ? 'bg-green-600' : 'bg-gray-800'
+                    }`}
                 >
                   {answer.text}
                 </li>

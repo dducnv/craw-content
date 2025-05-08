@@ -74,6 +74,10 @@ export class CrawlerService {
         if (text && !text.trim().endsWith('.')) {
           text = text.trim() + '.';
         }
+        // Viết hoa chữ cái đầu dòng
+        if (text) {
+          text = text.charAt(0).toUpperCase() + text.slice(1);
+        }
         if (text) {
           answers.push({
             label: String.fromCharCode(65 + i),
@@ -90,6 +94,10 @@ export class CrawlerService {
         // Thêm dấu chấm ở cuối nếu chưa có
         if (text && !text.trim().endsWith('.')) {
           text = text.trim() + '.';
+        }
+        // Viết hoa chữ cái đầu dòng
+        if (text) {
+          text = text.charAt(0).toUpperCase() + text.slice(1);
         }
         if (text) {
           answers.push({
