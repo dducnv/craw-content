@@ -20,7 +20,7 @@ export class CrawlerService {
     if (customConfig) {
       return customConfig;
     }
-    
+
     if (url) {
       const domain = new URL(url).hostname;
       const config = configs[domain];
@@ -28,19 +28,19 @@ export class CrawlerService {
         return config;
       }
     }
-    
+
     return defaultConfig;
   }
 
   public static async extractQuestions(
-    html: string, 
-    url?: string, 
+    html: string,
+    url?: string,
     customConfig: SelectorConfig | null = null
   ): Promise<Question[]> {
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
     const config = this.getConfig(url, customConfig);
-    
+
     // Sử dụng selector cha cho block câu hỏi
     const containerSelector = config.container || '.question';
     const questionTextSelector = config.questionText || '.questionText';
@@ -57,19 +57,20 @@ export class CrawlerService {
       let questionText = '';
       const questionTextElem = element.querySelector(questionTextSelector);
       if (questionTextElem) {
-        questionText = questionTextElem.innerHTML.trim() || '';
+        questionText = filterHtmlTags(questionTextElem.innerHTML.trim() || '');
       } else {
-        questionText = element.innerHTML.trim() || '';
+        questionText = filterHtmlTags(element.innerHTML.trim() || '');
       }
-      
+
       const correctAnswers = element.querySelectorAll(correctSelector);
       const incorrectAnswers = element.querySelectorAll(incorrectSelector);
-      
+
       const answers: { label: string; text: string; isCorrect: boolean }[] = [];
-      
+
       correctAnswers.forEach((answer, i) => {
         let text = answer.innerHTML.trim() || '';
-        text = text.replace(/^[A-D]\.?\s+|^\d+\.?\s+/i, '');
+        text = filterHtmlTags(text)
+        text = text.replace(/^(?:[A-Da-d][\.|\)]?\s*|[A-Da-d](?:\s+[A-Da-d])+\s*|\d+[\.|\)]?\s*|\d+\s*)/, '');
         if (text && !text.replace(/<[^>]+>/g, '').trim().endsWith('.')) {
           text = text.trim() + '.';
         }
@@ -79,15 +80,16 @@ export class CrawlerService {
         if (text) {
           answers.push({
             label: String.fromCharCode(65 + i),
-            text,
+            text: filterHtmlTags(text),
             isCorrect: true
           });
         }
       });
-      
+
       incorrectAnswers.forEach((answer, i) => {
         let text = answer.innerHTML.trim() || '';
-        text = text.replace(/^[A-D]\.?\s+|^\d+\.?\s+/i, '');
+        text = filterHtmlTags(text)
+        text = text.replace(/^(?:[A-Da-d][\.|\)]?\s*|[A-Da-d](?:\s+[A-Da-d])+\s*|\d+[\.|\)]?\s*|\d+\s*)/, '');
         if (text && !text.replace(/<[^>]+>/g, '').trim().endsWith('.')) {
           text = text.trim() + '.';
         }
@@ -97,7 +99,7 @@ export class CrawlerService {
         if (text) {
           answers.push({
             label: String.fromCharCode(65 + correctAnswers.length + i),
-            text,
+            text: filterHtmlTags(text),
             isCorrect: false
           });
         }
@@ -105,19 +107,19 @@ export class CrawlerService {
 
       let explanation = '';
       if (explanationSelector && element.querySelector(explanationSelector)) {
-        explanation = element.querySelector(explanationSelector)?.innerHTML.trim() || '';
+        explanation = filterHtmlTags(element.querySelector(explanationSelector)?.innerHTML.trim() || '');
       } else {
         // Tìm explanation trong text của block nếu không có selector riêng
         const blockHtml = element.innerHTML || '';
         const match = blockHtml.match(/Explanation:(.*)$/i);
         if (match) {
-          explanation = match[1].trim();
+          explanation = filterHtmlTags(match[1].trim());
         }
       }
 
       let paragraph: string | undefined = undefined;
       if (paragraphSelector && element.querySelector(paragraphSelector)) {
-        paragraph = element.querySelector(paragraphSelector)?.innerHTML.trim();
+        paragraph = filterHtmlTags(element.querySelector(paragraphSelector)?.innerHTML.trim() || '');
       }
 
       // Lấy image nếu có
@@ -166,4 +168,30 @@ async function imageUrlToBase64(url: string): Promise<string> {
     reader.onerror = reject;
     reader.readAsDataURL(blob);
   });
+}
+
+function filterHtmlTags(html: string): string {
+  const ALLOWED_TAGS = ['br', 'i', 'b', 'u', 'em', 'strong', 'sup', 'sub', 'mark', 'small', 'del', 'ins', 'code'];
+  const doc = document.createElement('div');
+  doc.innerHTML = html;
+
+  function recursive(node: Element | ChildNode) {
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      const el = node as Element;
+      if (!ALLOWED_TAGS.includes(el.tagName.toLowerCase())) {
+        // unwrap: replace node with its children
+        const parent = el.parentNode;
+        while (el.firstChild) {
+          parent?.insertBefore(el.firstChild, el);
+        }
+        parent?.removeChild(el);
+        return;
+      }
+      // Duyệt tiếp các con
+      Array.from(el.childNodes).forEach(recursive);
+    }
+  }
+
+  Array.from(doc.childNodes).forEach(recursive);
+  return doc.innerHTML;
 } 
