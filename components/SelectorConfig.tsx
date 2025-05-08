@@ -34,7 +34,7 @@ export default function SelectorConfigComponent({ onConfigChange, initialConfig 
     if (raw) {
       try {
         setSavedConfigs(JSON.parse(raw));
-      } catch {}
+      } catch { }
     }
   }, []);
 
@@ -118,7 +118,7 @@ export default function SelectorConfigComponent({ onConfigChange, initialConfig 
           setSavedConfigs(merged);
           localStorage.setItem(LOCAL_KEY, JSON.stringify(merged));
         }
-      } catch {}
+      } catch { }
     };
     reader.readAsText(file);
     // Reset input để có thể import lại cùng file nếu muốn
@@ -146,6 +146,7 @@ export default function SelectorConfigComponent({ onConfigChange, initialConfig 
           >
             Save Config
           </button>
+
           <button
             type="button"
             onClick={handleExportConfigs}
@@ -209,7 +210,7 @@ export default function SelectorConfigComponent({ onConfigChange, initialConfig 
 
         <div className="border-t border-gray-300 dark:border-gray-700 pt-4">
           <h4 className="font-medium mb-2 text-gray-900 dark:text-gray-50">Answer Selectors</h4>
-          
+
           <div className="space-y-3">
             <div>
               <label className="block text-sm font-medium text-gray-900 dark:text-gray-50 mb-1">
@@ -241,7 +242,7 @@ export default function SelectorConfigComponent({ onConfigChange, initialConfig 
 
         <div className="border-t border-gray-300 dark:border-gray-700 pt-4">
           <h4 className="font-medium mb-2 text-gray-900 dark:text-gray-50">Optional Selectors</h4>
-          
+
           <div className="space-y-3">
             <div>
               <label className="block text-sm font-medium text-gray-900 dark:text-gray-50 mb-1">
@@ -284,6 +285,23 @@ export default function SelectorConfigComponent({ onConfigChange, initialConfig 
           />
         </div>
       </div>
+      <button
+        type="button"
+        onClick={() => {
+          setConfig({
+            container: '',
+            questionText: '',
+            answers: { correct: '', incorrect: '' },
+            explanation: '',
+            paragraph: '',
+            image: ''
+          });
+          setConfigName('');
+        }}
+        className="px-3 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 mt-2"
+      >
+        Clear Form
+      </button>
     </div>
   );
 } 

@@ -1,5 +1,5 @@
 export class FetcherService {
-  private static readonly PROXY_URL = 'https://cors-anywhere.herokuapp.com/';
+   static readonly PROXY_URL = 'https://cors-anywhere.herokuapp.com/';
 
   public static async fetchContent(url: string): Promise<string> {
     try {

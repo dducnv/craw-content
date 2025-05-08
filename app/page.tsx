@@ -7,7 +7,6 @@ import { db } from '@/services/database';
 import { SelectorConfig } from '@/services/config';
 import SelectorConfigComponent from '@/components/SelectorConfig';
 import { FiChevronLeft, FiChevronRight, FiTrash2, FiFileText } from 'react-icons/fi';
-import 'prismjs/components/prism-markup';
 import 'prismjs/themes/prism.css';
 import prettier from 'prettier/standalone';
 import parserHtml from 'prettier/parser-html';
@@ -102,12 +101,7 @@ export default function Home() {
     setError(null);
   };
 
-  const handleClearForm = () => {
-    setUrl('');
-    setHtml('');
-    setCustomConfig(null);
-    setError(null);
-  };
+
 
   const handleExportJSON = () => {
     const exportData = questions.map(q => ({
@@ -315,13 +309,6 @@ export default function Home() {
               </button>
               <button
                 type="button"
-                onClick={handleClearForm}
-                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-              >
-                Clear Form
-              </button>
-              <button
-                type="button"
                 onClick={handleClear}
                 className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
               >
@@ -349,6 +336,16 @@ export default function Home() {
                 )}
               </div>
               <p className="mb-4" dangerouslySetInnerHTML={{ __html: question.questionText }} />
+              {question.image && (
+                <div className="mb-4 flex justify-center">
+                  <img
+                    src={question.image}
+                    alt={`Question ${question.questionNumber} image`}
+                    className="max-w-full max-h-64 rounded shadow border"
+                    loading="lazy"
+                  />
+                </div>
+              )}
               <ul className="space-y-2">
                 {question.answers.map((answer, index) => (
                   <li

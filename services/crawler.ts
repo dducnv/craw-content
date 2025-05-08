@@ -52,7 +52,7 @@ export class CrawlerService {
     const questionElements = doc.querySelectorAll(containerSelector);
     const questions: Question[] = [];
 
-    questionElements.forEach((element, index) => {
+    for (const [index, element] of Array.from(questionElements).entries()) {
       // Lấy HTML câu hỏi từ questionTextSelector bên trong block nếu có
       let questionText = '';
       const questionTextElem = element.querySelector(questionTextSelector);
@@ -69,13 +69,10 @@ export class CrawlerService {
       
       correctAnswers.forEach((answer, i) => {
         let text = answer.innerHTML.trim() || '';
-        // Bỏ tiền tố ABCD. hoặc số thứ tự ở đầu (chỉ với text, không ảnh hưởng đến HTML)
         text = text.replace(/^[A-D]\.?\s+|^\d+\.?\s+/i, '');
-        // Thêm dấu chấm ở cuối nếu chưa có (chỉ với text, không ảnh hưởng đến HTML)
         if (text && !text.replace(/<[^>]+>/g, '').trim().endsWith('.')) {
           text = text.trim() + '.';
         }
-        // Viết hoa chữ cái đầu dòng (chỉ với text, không ảnh hưởng đến HTML)
         if (text) {
           text = text.charAt(0).toUpperCase() + text.slice(1);
         }
@@ -127,8 +124,14 @@ export class CrawlerService {
       let image: string | undefined = undefined;
       if (config.image) {
         const imgElem = element.querySelector(config.image);
-        if (imgElem && imgElem instanceof HTMLImageElement) {
-          image = imgElem.src;
+        if (imgElem && imgElem instanceof HTMLImageElement && imgElem.src) {
+          try {
+            const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(imgElem.src);
+            image = await imageUrlToBase64(proxyUrl);
+          } catch {
+            image = imgElem.src; // fallback nếu lỗi
+            console.log('Error converting image to base64:', imgElem.src);
+          }
         } else if (imgElem) {
           // Nếu không phải <img> nhưng có background-image
           const bg = (imgElem as HTMLElement).style.backgroundImage;
@@ -148,8 +151,19 @@ export class CrawlerService {
         hasMultipleCorrect: correctAnswers.length > 1,
         image
       });
-    });
+    }
 
     return questions;
   }
+}
+
+async function imageUrlToBase64(url: string): Promise<string> {
+  const response = await fetch(url);
+  const blob = await response.blob();
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
 } 
